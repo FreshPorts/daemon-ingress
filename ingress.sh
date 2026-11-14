@@ -9,6 +9,21 @@
 
 . /usr/local/etc/freshports/ingress.sh
 
+#
+# The flag directory.  ingress.sh has read INGRESS_FLAGDIR since 1609260
+# (2020-07-18), but this repo's config sample went on setting FLAGDIR, the
+# name from 2015.  With only FLAGDIR set, FLAG below was "/job_waiting",
+# which never exists: job-waiting.pl never ran, so neither did check_git.sh,
+# and no new commits were fetched, with nothing logged.  Accept the old
+# name, and refuse to start without either.
+#
+INGRESS_FLAGDIR=${INGRESS_FLAGDIR:-${FLAGDIR}}
+if [ -z "${INGRESS_FLAGDIR}" ]
+then
+	echo "FATAL: neither INGRESS_FLAGDIR nor FLAGDIR is set in /usr/local/etc/freshports/ingress.sh"
+	exit 1
+fi
+
 CP='/bin/cp'
 
 # we do not use -i because that would fail when re re-run a commit

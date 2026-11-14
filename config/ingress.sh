@@ -14,4 +14,5 @@ SCRIPTDIR="/usr/local/libexec/freshports"
 # for ingress user
 INGRESS_BASEDIR="/var/db/ingress"
 INGRESS_MSGDIR="${INGRESS_BASEDIR}/message-queues"
-FLAGDIR="${INGRESS_BASEDIR}/signals"
+# where job_waiting and the other flag files are; ingress.sh reads this
+INGRESS_FLAGDIR="${INGRESS_BASEDIR}/signals"

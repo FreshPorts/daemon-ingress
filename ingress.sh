@@ -52,6 +52,9 @@ check_for_jobs() {
 	# Removed first, it survives, and the next pass of the loop runs
 	# job-waiting.pl again.
 	#
+	# asked to stop: start no new job
+	[ ${STOP_REQUESTED} = 1 ] && return
+
 	FLAG="${INGRESS_FLAGDIR}/job_waiting"
 	if [ -f ${FLAG} ]
 	then
@@ -75,6 +78,22 @@ check_for_jobs() {
 
 echo "starting up!"
 
+#
+# Stopping: finish the job in hand, start nothing new, then exit.
+#
+# "service ingress stop" sends SIGTERM to daemon(8), which passes it to this
+# shell only, not to the job it is running.  With no trap the shell died at
+# once and that job -- job-waiting.pl and whatever it was running, such as
+# check_git.sh -- carried on with no parent; a restart then started a
+# second loop beside it.
+#
+# sh runs a trap only once the command in the foreground has returned, so
+# the job is never cut off: the trap just notes the request, and the loop
+# checks it before starting anything else.
+#
+STOP_REQUESTED=0
+trap 'STOP_REQUESTED=1; echo "stop requested: finishing the current job first"' TERM INT
+
 if [ ! -d ${SCRIPTDIR} ]
 then
 	echo "Required directory does not exist: ${SCRIPTDIR}"
@@ -92,6 +111,12 @@ echo ready
 
 while :
 	do
+	if [ ${STOP_REQUESTED} = 1 ]
+	then
+		echo "stopping, as requested"
+		exit 0
+	fi
+
 	cd ${SCRIPTDIR}
 
 	if [ -e 'OFFLINE' ]
@@ -101,5 +126,6 @@ while :
 	else
 		check_for_jobs
 	fi
-	sleep 3
+	# no pause once asked to stop: the check at the top exits
+	[ ${STOP_REQUESTED} = 1 ] || sleep 3
 done

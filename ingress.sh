@@ -39,12 +39,23 @@ PERL='/usr/local/bin/perl'
 
 check_for_jobs() {
 	#
-	# This flag file is only set by a job run by this script.
-	# A race condition should never arise.
+	# job_waiting only wakes job-waiting.pl, which then runs a job for each
+	# of the other flags it finds, until none is left.  Remove it before
+	# running job-waiting.pl, not after.
+	#
+	# This is the ingress user's job_waiting, in INGRESS_FLAGDIR; the
+	# freshports user has its own.  It is not set by jobs this script runs,
+	# as this comment used to say, but by check_for_git_commits.sh from
+	# cron, along with check_git, the ingress user's only job.
+	# Removed afterwards, a flag set while job-waiting.pl was finishing was
+	# deleted unread, and that job waited for the next wake-up.
+	# Removed first, it survives, and the next pass of the loop runs
+	# job-waiting.pl again.
 	#
 	FLAG="${INGRESS_FLAGDIR}/job_waiting"
 	if [ -f ${FLAG} ]
 	then
+		rm -f ${FLAG}
 		cd ${SCRIPTDIR}
 		echo "yes, there is a job waiting"
 		echo "running ${PERL} ./job-waiting.pl"
@@ -57,7 +68,6 @@ check_for_jobs() {
 		else
 			echo "FATAL job-waiting.pl finished with an error: $?"
 		fi
-		rm ${FLAG}
 	fi
 }
 

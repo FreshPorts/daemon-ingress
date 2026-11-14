@@ -62,11 +62,13 @@ check_for_jobs() {
 		echo "from directory  ${SCRIPTDIR}"
 		ls -l ./job-waiting.pl
 		${PERL} ./job-waiting.pl
-		if [ $? -eq 0 ]
+		# saved at once: by the echo below, $? was the [ test's (always 1)
+		status=$?
+		if [ $status -eq 0 ]
 		then
 			echo "job-waiting.pl finishes normally"
 		else
-			echo "FATAL job-waiting.pl finished with an error: $?"
+			echo "FATAL job-waiting.pl finished with an error: $status"
 		fi
 	fi
 }
@@ -91,8 +93,6 @@ echo ready
 while :
 	do
 	cd ${SCRIPTDIR}
-
-	INCOMING=${INGRESS_MSGDIR}/incoming
 
 	if [ -e 'OFFLINE' ]
 	then
